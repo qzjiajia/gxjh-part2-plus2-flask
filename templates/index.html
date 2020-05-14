@@ -1,0 +1,101 @@
+<html>
+<head>
+    <meta charset="UTF-8">
+    <link href="{{ url_for('static', filename = 'css/uploadfile.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename = 'css/mdui.css') }}" rel="stylesheet">
+    <script src="{{ url_for('static', filename = 'js/jquery.js') }}"></script>
+    <script src="{{ url_for('static', filename = 'js/jquery.uploadfile.js') }}"></script>
+</head>
+<body>
+<div class="mdui-container">
+    <div class="mdui-toolbar mdui-color-theme">
+        <a href="javascript:;" class="mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">menu</i></a>
+        <span class="mdui-typo-title">文件上传</span>
+        <div class="mdui-toolbar-spacer"></div>
+        <a href="javascript:location.reload();" class="mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">refresh</i></a>
+    </div>
+    <div id="fileuploader">上传文件</div>
+    <div class="mdui-table-fluid">
+        <table id="filesTable" class="mdui-table mdui-table-hoverable">
+            <thead>
+            <tr>
+                <th>文件名</th>
+                <th>时间</th>
+                <th>下载</th>
+            </tr>
+            </thead>
+            <tbody id="zztbody">
+            <tr>
+                <td>--</td>
+                <td>--</td>
+                <td>--</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+<script>
+    $(document).ready(function () {
+        $("#fileuploader").uploadFile({
+            url: "/uploader",
+            fileName: "file",
+            multiple: true,
+            dragDrop: true,
+            showDelete: false,
+            onSuccess: function (files, data, xhr, pd) {
+                getList();
+            }
+        });
+        getList();
+    });
+
+    function getList() {
+        $.ajax({
+            method: 'GET',
+            url: '/uploaderlist',
+            dataType: "json",
+            success: function (data) {
+                console.log(data);
+                processList(data)
+            }
+        });
+    }
+
+    function processList(t) {
+        var zztbody = document.getElementById("zztbody");
+        zztbody.innerHTML = "";
+        for (var i = t.length-1; i >= 0; i--) {
+            addRow(t[i]["filename"], t[i]["time"], t[i]["savename"])
+        }
+    }
+
+    function addRow(filename, time, savename) {
+        try {
+            var table = document.getElementById("zztbody");
+            var newRow = document.createElement("tr");
+            var column1 = document.createElement("td");
+            column1.innerText = filename;
+            var column2 = document.createElement("td");
+            column2.innerText = time;
+            var column3 = document.createElement("td");
+            column3.innerHTML = "<button class='mdui-btn mdui-btn-raised mdui-ripple mdui-color-theme-accent' onclick=download('" + savename + "')>下载</button>";
+            newRow.appendChild(column1);
+            newRow.appendChild(column2);
+            newRow.appendChild(column3);
+            table.appendChild(newRow);
+        } catch (e) {
+            console.log(e.message);
+        }
+    }
+
+    function download(realname) {
+        // url = "./file/" + uuid;
+        // getBlob(url).then(blob => {
+        //     saveAs(blob, filename);
+        // });
+        var url = "/download/" + realname;
+        window.open(url)
+    }
+</script>
+</body>
+</html>

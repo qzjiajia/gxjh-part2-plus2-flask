@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>留言板</title>
+    <link href="{{ url_for('static', filename = 'css/mdui.css') }}" rel="stylesheet">
+    <script src="{{ url_for('static', filename = 'js/jquery.js') }}"></script>
+</head>
+<body>
+
+<div class="mdui-container">
+    <div class="mdui-toolbar mdui-color-theme">
+        <a href="javascript:;" class="mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">menu</i></a>
+        <span class="mdui-typo-title">值</span>
+        <div class="mdui-toolbar-spacer"></div>
+        <a href="javascript:location.reload();" class="mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">refresh</i></a>
+    </div>
+    <div class="mdui-card">
+
+        <!-- 卡片的标题和副标题 -->
+        <div class="mdui-card-primary">
+            <div class="mdui-card-primary-title">添加内容</div>
+            <div class="mdui-card-primary-subtitle" id="cardStatus"></div>
+        </div>
+
+        <!-- 卡片的内容 -->
+        <div class="mdui-card-content">
+            <div class="mdui-textfield">
+                <label class="mdui-textfield-label">在这里留言</label>
+                <input class="mdui-textfield-input" type="text" id="textVal"/>
+            </div>
+        </div>
+
+        <!-- 卡片的按钮 -->
+        <div class="mdui-card-actions">
+            <button class="mdui-btn mdui-ripple" onclick="send()">发送</button>
+            <button class="mdui-btn mdui-ripple" onclick="getList()">刷新</button>
+        </div>
+    </div>
+    <br>
+    <div class="mdui-table-fluid">
+        <table id="filesTable" class="mdui-table mdui-table-hoverable">
+            <thead>
+            <tr>
+                <th>#</th>
+                <th>留言</th>
+            </tr>
+            </thead>
+            <tbody id="zztbody">
+            <tr>
+                <td>--</td>
+                <td>--</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+<script>
+    function getList() {
+        $.ajax({
+            method: 'GET',
+            url: '/getBoard',
+            dataType: "json",
+            success: function (data) {
+                console.log(data);
+                processList(data)
+            }
+        });
+    }
+
+    function processList(t) {
+        var zztbody = document.getElementById("zztbody");
+        zztbody.innerHTML = "";
+        for (var i = t.length - 1; i >= 0; i--) {
+            addRow(t[i]["id"], t[i]["string"])
+        }
+    }
+
+    function addRow(id, v) {
+        try {
+            var table = document.getElementById("zztbody");
+            var newRow = document.createElement("tr");
+            var column1 = document.createElement("td");
+            column1.innerText = id;
+            var column2 = document.createElement("td");
+            column2.innerText = v;
+            newRow.appendChild(column1);
+            newRow.appendChild(column2);
+            table.appendChild(newRow);
+        } catch (e) {
+            console.log(e.message);
+        }
+    }
+
+    function send() {
+        var v = $("#textVal").val();
+        $.ajax({
+            method: 'POST',
+            url: '/sendBoard',
+            data: {
+                string: v
+            },
+            success: function (data) {
+                console.log(data);
+                if (data == "success") {
+                    data = "成功";
+                }
+                getList();
+                mdui.dialog({
+                    title: '结果',
+                    content: data,
+                    buttons: [
+                        {
+                            text: '确认'
+                        }
+                    ]
+                });
+            }
+        });
+    }
+
+    $(document).ready(function () {
+        getList();
+    });
+</script>
+<script src="{{ url_for('static', filename = 'js/mdui.min.js') }}"></script>
+</body>
+</html>
